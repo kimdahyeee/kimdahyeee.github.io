@@ -1,9 +1,9 @@
 ---
-layout: page
+layout: archive
 ---
 
-{% for post in site.categories[page.category] %}
-    <a href="{{ post.url | absolute_url }}">
-      {{ post.title }}
-    </a>
-{% endfor %}
+{{ content }}
+
+<div class="entries-{{ page.entries_layout }}">
+  {% include posts-category.html taxonomy=page.taxonomy type=page.entries_layout %}
+</div>
