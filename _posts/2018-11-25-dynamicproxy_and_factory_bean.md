@@ -22,6 +22,7 @@ title: dynamic proxy and factory bean
 [데코레이터 패턴 참고 블로그](https://jdm.kr/blog/78)
 
 > 스프링에서는 DI를 이용해서 데코레이터 패턴을 구성할 수 있다.
+
 ```
 <!--데코레이터-->  
 <bean id="userService" class="com.dahye.user.service.UserServiceTx">  
