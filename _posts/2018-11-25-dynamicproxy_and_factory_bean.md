@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: posts
 title: dynamic proxy and factory bean
 ---
 # 다이내믹 프록시와 팩토리 빈
