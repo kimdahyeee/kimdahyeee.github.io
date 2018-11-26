@@ -36,6 +36,7 @@ title: dynamic proxy and factory bean
  <property name="mailSender" ref="mailSender" />  
 </bean>
 ```
+
 - 데코레이터 패턴은 인터페이스를 통해 위임하는 방식이기 때문에 어느 데코레이터에서 타깃으로 연결될지 코드 레벨에선 미리 알 수 없다.
 - 타깃의 코드를 손대지 않고, 클라이언트가 호출하는 방법도 변경하지 않은 채로 새로운 기능을 추가할 때 유용한 방법이다.
 
@@ -45,6 +46,7 @@ title: dynamic proxy and factory bean
 
 예) Collections의 unmodifiableCollection()
 - 타깃의 기능 자체에는 관여하지 않으면서 접근하는 방법을 제어한다.
+
 ```
 static class UnmodifiableCollection<E> implements Collection<E>, Serializable {  
     private static final long serialVersionUID = 1820017752578914078L;  
@@ -74,6 +76,7 @@ static class UnmodifiableCollection<E> implements Collection<E>, Serializable {
 프록시는 다음의 두가지 기능으로 구성된다.
 - 타깃과 같은 메소드를 구현하고 있다가 메소드가 호출되면 타깃 오브젝트로 위임한다.
 - 지정된 요청에 대해서는 부가기능을 수행한다.
+
 ```
 public class UserServiceTx implements UserService {  
   
@@ -99,6 +102,7 @@ public class UserServiceTx implements UserService {
     }  
 }
 ```
+
 ❔ 번거로운 이유는
 1. add () 메소드와 같이 .. 부가기능이 필요 없는 메소드도 구현해서 타깃으로 위임하는 코드를 일일이 만들어주어야 한다.
 2. 부가기능 코드가 중복될 가능성이 많다. (트랜잭션 코드가 모든 메서드에 적용되는 경우)
@@ -109,6 +113,7 @@ public class UserServiceTx implements UserService {
 다이내믹 프록시는 리플렉션 기능을 이용해서 프록시를 만들어준다.
 > ❔ 리플렉션이란 
 > 구체적인 클래스 타입을 알지 못해도, 그 클래스의 메소드, 타입, 변수들을 접근할 수 있도록 해주는 API
+
 ```
 public class ReflectionTest {  
     @Test  
@@ -133,6 +138,7 @@ public class ReflectionTest {
 
 ### 프록시 클래스
 다이내믹 프록시를 이용한 프록시를 만들어보자.
+
 ```
 public interface Hello {  
     String sayHello(String name);  
@@ -155,7 +161,9 @@ public class HelloTarget implements Hello {
   }  
 }
 ```
+
  프록시 
+ 
 ```
 public class HelloUppercase implements Hello {  
   
@@ -178,6 +186,7 @@ public class HelloUppercase implements Hello {
   }  
 }
 ```
+
 ```
 @Test  
 public void simpleProxyUppercase() {  
@@ -198,6 +207,7 @@ public void simpleProxyUppercase() {
 
 (그림 6-13)
 #### UppercaseHandler.java 
+
 ```
 public class UppercaseHandler implements InvocationHandler {  
   
@@ -214,12 +224,14 @@ public class UppercaseHandler implements InvocationHandler {
   }  
 }
 ```
+
 - 다이내믹 프록시가 클라이언트로 부터 받는 모든 요청은  invoke() 메소드로 전달된다.
 - 다이내믹 프록시를 통해 요청이 전달되면 리플렉션 API를 이용해 타깃 오브젝트의 메소드를 호출한다.
 - 타깃 인터페이스의 모든 메소드 요청이 하나의 메소드로 집중되기 때문에 **중복되는 기능을 효과적으로 제공할 수 있다.**
 
 
 #### 다이내믹 프록시 생성 (Proxy 클래스의 newProxyInterface() 메소드 이용)
+
 ```
 @Test  
 public void simpleProxyWithHandler() {  
@@ -233,11 +245,13 @@ public void simpleProxyWithHandler() {
   assertThat(hello.sayThankYou("dahye"), is("THANK YOU DAHYE"));  
 }
 ```
+
 > 다이내믹 프록시 생성 방법을 적용했지만, 코드의 양도 줄어든 것 같지 않고, 코드 작성은 더욱 까다로워진 것 같다.
 
 ### 다이내믹 프록시의 확장
 > 다이내믹 프록시 방식이 직접 정의한 프록시보다 훨씬 유연하고 많은 **장점**이 있다. **메소드가 추가될 때마다 프록시의 코드를 매번 추가하는 일이 없어진다.**
 ##### 스트링 외의 리턴 타입을 갖는 메소드가 추가된다면 ?
+
 ```
 public class UppercaseHandler implements InvocationHandler {  
   
@@ -260,8 +274,10 @@ public class UppercaseHandler implements InvocationHandler {
     }  
 }
 ```
+
 ## 다이내믹 프록시를 이용한 트랜잭션 부가기능
 UserServiceTx를 다이내믹 프록시 방식으로 변경해보자.
+
 ```
 public class TransactionHandler implements InvocationHandler {  
   
@@ -324,6 +340,7 @@ public void upgradeAllOrNothing() throws Exception {
 ## 다이내믹 프록시를 위한 팩토리 빈
 TransactionHandler와 다이내믹 프록시를 스프링의 DI를 통해 사용할 수 있도록 만들어보자.
 다이내믹 프록시 오브젝트의 클래스가 어떤 것인지 알 수 없다.
+
 ```
 public class TransactionHandler implements InvocationHandler {  
   
@@ -333,12 +350,14 @@ public class TransactionHandler implements InvocationHandler {
   
 }
 ```
+
 스프링은 클래스 정보를 가지고 디폴트 생성자를 통해 오브젝트를 만드는 방법 외에도 빈을 만들 수 있는 여러 가지 방법을 제공한다.
 1. 팩토리 빈을 이용한 빈 생성
 **팩토리 빈이란❔** 스프링을 대신해서 오브젝트의 생성로직을 담당하도록 만들어진 특별한 빈
  **팩토리 빈을 만드는 방법에는 여러가지가 있는데, 가장 간단한 방법은 스프링의 FactoryBean이라는 인터페이스를 구현하는 것이다**
  
  ***FactoryBean.java***
+ 
 ```
 public interface FactoryBean<T> {  
     T getObject() throws Exception;  
@@ -347,8 +366,10 @@ public interface FactoryBean<T> {
   
 }
 ```
+
 ### factoryBean 학습 테스트
 ***생성자를 제공하지 않는 클래스***
+
 ```
 public class Message {  
     String text;  
@@ -367,11 +388,14 @@ public class Message {
   }  
 }
 ```
+
 - private 생성자를 가진 클래스는 빈으로 등록하는 일은 권장되지 않는다.
 - 즉, 
+
 ```
 <bean id="m" class="....Message>
 ```
+
 와 같이 사용하면 안된다.
 
 ```
@@ -400,16 +424,20 @@ public class MessageFactoryBean implements FactoryBean<Message> {
   }  
 }
 ```
+
 - 스프링은 FactoryBean 인터페이스를 구현한 클래스가 빈의 크래스로 지정되면, 팩토리 빈 클래스의 오브젝트의 **getObject() 메소드**를 이용해 오브젝트를 가져오고, 이를 빈 오브젝트로 사용한다.
 
 따라서, 다음과 같이 빈을 설정할 수 있다.
+
  ```
  <bean id="message" class="com.dahye.learningtest.factorybean.MessageFactoryBean">  
 	 <property name="text" value="Factory bean" />  
 </bean>
  ```
+ 
  - **다른 빈 설정과 다른 점은 message 오브젝트의 타입이 class 애트리뷰트에 정의된 MessageFactoryBean이 아니라 Message 차입이라는 것이다.** 
  - Message 빈의 타입은 getObjectType()의 메소드가 반환하는 타입으로 결정된다.
+ 
 ```
 @Test  
 public void getMessageFromFactoryBean() {  
@@ -431,6 +459,7 @@ public void getFactoryBean() throws Exception {
 Proxy의 newProxyInstance() 메소드를 통해서만 생성이 가능한 다이내믹 프록시 오브젝트는 일반적인 방법으로는 빈으로 등록할 수 없다.
 대신 **팩토리 빈**을 사용하면 다이내믹 프록시 오브젝트를 스프링의 빈으로 만들어줄 수가 있다.
 > 팩토리 빈을 사용해서 스프링 빈으로 등록해보자
+
 ```
 public class TxProxyFactoryBean implements FactoryBean<Object> {  
   
@@ -479,7 +508,9 @@ public class TxProxyFactoryBean implements FactoryBean<Object> {
   }  
 }
 ```
+
 ***빈 주입***
+
 ```
 <bean id="userService" class="com.dahye.user.service.TxProxyFactoryBean">  
  <property name="target" ref="userServiceImpl" />  
@@ -488,7 +519,9 @@ public class TxProxyFactoryBean implements FactoryBean<Object> {
  <property name="serviceInterface" value="com.dahye.user.service.UserService" />  
 </bean>
 ```
+
 ***테스트 코드***
+
 ```
 @Test  
 public void upgradeAllOrNothing() throws Exception {  
@@ -512,17 +545,21 @@ public void upgradeAllOrNothing() throws Exception {
     checkGradeUpgrade(users.get(1), false);  
 }
 ```
+
 **👍🏻 해당 코드는 계속 재사용할 수 있다. 트랜잭션 부가기능이 필요한 빈이 추가될 때마다 빈 설정만 추가해주면 된다**
 
 ## 프록시 팩토리 빈 방식의 장점과 한계
 ### 프록시 팩토리 빈의 재사용
 TransactionHandler를 이용하는 다이내믹 프록시를 생성해주는 TxProxyFactoryBean은 코드의 수정 없이도 다양한 클래스에 적용할 수 있다.
+
 ```
 <bean id="coreServiceTarget" class="complex.module.CoreServiceImpl>
 	<property name="coreDao" ref="coreDao" />
 </bean>
 ```
+
 ***CoreService에 대한 트랜잭션 프록시 팩토리 빈***
+
 ```
 <bean id="coreService" class="com.dahye.user.service.TxProxyFactoryBean">  
  <property name="target" ref="coreServiceTarget" />  
@@ -531,6 +568,7 @@ TransactionHandler를 이용하는 다이내믹 프록시를 생성해주는 TxP
  <property name="serviceInterface" value="com.dahye.user.service.CoreService" />  
 </bean>
 ```
+
 ### 프록시 팩토리 빈 방식의 장점
 프록시 팩토리는 앞의 두 문제를 해결해준다.
 - 타깃 인터페이스를 구현하는 클래스를 일일이 만드는 **번거로움을 제거**할 수 있다.
